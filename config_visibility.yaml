@@ -1,0 +1,32 @@
+# path configuration
+path:
+  # source template / phlist
+  filename: /home/ambra/Desktop/projects/ctools-pipe/ctools-pipe/input/Event815.fits
+# observation setup
+obs_setup:
+  # sub altitude below which starts the night (for astronomical darkness set -18)
+  twilight: -18
+  # chosen site (WIP: if you want to compute the visibility for all sites than set null)
+  site: North
+  # altitude (lower) thresholds for IRFs ranges
+  thresholds:
+    - 10
+    - 36
+    - 57
+  # relative IRFs zenith angle
+  zenith_angles:
+    - 60
+    - 40
+    - 20
+# more parameters
+other:
+  # all sites
+  sites_list:
+    North: Roque de los Muchachos
+    South: Paranal
+  # use visibility table windows or compute new ones
+  use_visibility_table: no
+  # total grid points (only if use_visibility_table: no)
+  total_points: 100
+  # grid points within visibility window
+  window_points: 10
