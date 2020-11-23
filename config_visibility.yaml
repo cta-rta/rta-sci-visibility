@@ -1,7 +1,7 @@
 # path configuration
 path:
   # source template / phlist
-  filename: ../ctools-pipe/input/Event815.fits
+  filename: path/to/template.fits
 # observation setup
 setup:
   # sub altitude below which starts the night (for astronomical darkness set -18)
