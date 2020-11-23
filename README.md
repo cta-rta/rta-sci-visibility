@@ -2,14 +2,14 @@
 
 ## Installation
 
-Create a virtual environment with all required dependences: 
+Create a virtual environment with all required dependencies: 
 ```bash
 conda env create --name <envname> --file=env_visibility.yaml
 ```
 
-### Execution
+### Example
 
-Modify the configuration file:
+Modify the configuration file (es: config_visibility.yaml):
 ```yaml
 path:
     filename: <path/to/input/fits/file>
