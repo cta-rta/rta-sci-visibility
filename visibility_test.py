@@ -10,8 +10,8 @@
 import argparse
 import warnings
 import yaml
-import astropy.units as u
 import numpy as np
+import astropy.units as u
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
 from astropy.io import fits
@@ -118,35 +118,3 @@ else:
             irfs['irf'] = complete_irf_name(irfs['irf'], site, '0.5h')
             print('IRFs', irfs)
             del visibility
-
-# ------------------------------ EXAMPLE 3 (IMPLICIT) :: PROLONGED EVENT DURATION -------------------- !!!
-
-t_start = t_trigger
-# The template duration was too short to test >1 windows of observability
-duration = Time(3, format='jd')
-# ignore warnings
-with warnings.catch_warnings():
-    warnings.filterwarnings('ignore')
-    print('\nEvent full duration')
-    # initialise
-    visibility = Visibility()
-    # visibility points in JD and AltAz
-    visibility.visibility_points(t_start, duration, total_points)
-    visibility.visibility_altaz(source_radec, sites[site])
-    # find nights
-    nights = visibility.get_nighttime(twilight=twilight)
-    print('nights:', nights)
-    del visibility
-    # within each night find IRFs
-    for i in range(len(nights['start'])):
-        print('Night', i+1, 'of', len(nights['start']))
-        t_start = Time(nights['start'][i], format='jd')
-        duration = Time(nights['stop'][i] - nights['start'][i], format='jd')
-        # initialise
-        visibility = Visibility()
-        # short-cut: IRFs and relative time intervals
-        irfs = visibility.associate_irf_one_night(source_radec, t_start, duration, sites[site], window_points, thresholds, zenith_angles)
-        # complete IRFs
-        irfs['irf'] = complete_irf_name(irfs['irf'], site, '0.5h')
-        print('IRFs', irfs)
-        del visibility
