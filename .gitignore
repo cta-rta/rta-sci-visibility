@@ -1,6 +1,7 @@
-./*
+/*
 .*
 *.png
 
 # exception
 !/lib
+/lib/__*
