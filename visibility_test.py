@@ -52,8 +52,10 @@ with fits.open(filename) as hdul:
     if use_visibility_table:
         # using visibility table
         visibility_table = Table.read(hdul, hdu=1)
-        # time windows [THIS SHOULD BE CHANGED ACCORDING TO THE TEMPLATE FORMAT]
+        # time windows [THIS SHOULD BE CHANGED ACCORDING TO THE TEMPLATE FORMAT IF > 1 NIGHTS IN TABLE]
         t = Time(visibility_table['True'].data, format='jd')
+        print(t)
+        breakpoint()
         t_true = {'North': t[0:2], 'South': t[2:4]}
         # minimum altitude
         min_altitude = visibility_table.meta['MIN_ALT'] * u.deg
@@ -67,7 +69,7 @@ with fits.open(filename) as hdul:
 
 # ------------------------- EXAMPLE 1 (COMPACT) :: USING VISIBILITY TABLE -------------------------- !!!
 
-if use_visibility_table:
+if use_visibility_table in ('all', True):
     print('Example of use: visibility table from template')
     # set start time and duration
     t_start = t_true[site][0]
@@ -85,7 +87,7 @@ if use_visibility_table:
         del visibility
 
 # ------------------------------ EXAMPLE 2 (EXPLICIT) :: W/O USING VISIBILITY TABLE -------------------- !!!
-else:
+if visibility_table in ('all', False):
     print('\nExample of use: event full duration')
     # set start time and duration
     t_start = t_trigger
