@@ -1,7 +1,7 @@
 # path configuration
 path:
   # source template / phlist
-  filename: path/to/template.fits
+  filename: /path/to/template.fits
 # observation setup
 setup:
   # sub altitude below which starts the night (for astronomical darkness set -18)
@@ -23,7 +23,7 @@ sites_list:
   North: Roque de los Muchachos
   South: Paranal
 # use visibility table windows or compute new ones
-use_visibility_table: no
+use_visibility_table: yes   # all to compute both from visibility table and event data
 # total grid points (only if use_visibility_table: no)
 total_points: 100
 # grid points within visibility window
