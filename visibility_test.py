@@ -19,14 +19,13 @@ from astropy.table import Table
 from astropy.coordinates import SkyCoord
 from lib.visibility_tools import Visibility, complete_irf_name
 
-
 # parse command line inputs
 parser = argparse.ArgumentParser(description='Simple test for source visibility.')
 parser.add_argument('config', metavar='cf', type=str, help='configuration yaml file')
 # configuration file
 cf = parser.parse_args().config
 # load params configuration from cf
-with open('config_visibility.yaml') as f:
+with open(cf) as f:
     cfg = yaml.load(f, Loader=yaml.FullLoader)
 
 filename = cfg['path']['filename']
@@ -36,8 +35,7 @@ sites = cfg['sites_list']
 thresholds = cfg['setup']['thresholds']
 zenith_angles = cfg['setup']['zenith_angles']
 use_visibility_table = cfg['use_visibility_table']
-if not use_visibility_table:
-    total_points = cfg['total_points']
+total_points = cfg['total_points']
 window_points = cfg['window_points']
 
 # initialise site coordinates
@@ -49,31 +47,30 @@ with fits.open(filename) as hdul:
     source_radec = SkyCoord(ra=hdr['RA'] * u.deg, dec=hdr['DEC'] * u.deg, frame='icrs')
     # source trigger time
     t_trigger = Time(hdr['GRBJD'] * u.day, format='jd')
-    if use_visibility_table:
+    if use_visibility_table in ('all', True):
         # using visibility table
         visibility_table = Table.read(hdul, hdu=1)
         # time windows [THIS SHOULD BE CHANGED ACCORDING TO THE TEMPLATE FORMAT IF > 1 NIGHTS IN TABLE]
         t = Time(visibility_table['True'].data, format='jd')
-        print(t)
-        breakpoint()
         t_true = {'North': t[0:2], 'South': t[2:4]}
         # minimum altitude
         min_altitude = visibility_table.meta['MIN_ALT'] * u.deg
         # replace minimum altitude within thresholds
         thresholds[0] = min_altitude.value
-    else:
+    if use_visibility_table in ('all', False):
         # otherwise use event total duration
         times = np.array(hdul['TIMES (AFTERGLOW)'].data.tolist())
         afterglow_duration = Time(((times[-1] + times[1]) / 2)[0] / 86400, format='jd')
 
 
-# ------------------------- EXAMPLE 1 (COMPACT) :: USING VISIBILITY TABLE -------------------------- !!!
+# --------------------- EXAMPLE 1 (COMPACT) :: USING VISIBILITY TABLE -------------------------- !!!
 
 if use_visibility_table in ('all', True):
     print('Example of use: visibility table from template')
     # set start time and duration
     t_start = t_true[site][0]
     duration = t_true[site][1] - t_true[site][0]
+    print('visibility table time true:', t_true[site])
     # ignore warnings
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore')
@@ -86,8 +83,8 @@ if use_visibility_table in ('all', True):
         print('IRFs', irfs)
         del visibility
 
-# ------------------------------ EXAMPLE 2 (EXPLICIT) :: W/O USING VISIBILITY TABLE -------------------- !!!
-if visibility_table in ('all', False):
+# -------------------------- EXAMPLE 2 (EXPLICIT) :: W/O USING VISIBILITY TABLE -------------------- !!!
+if use_visibility_table in ('all', False):
     print('\nExample of use: event full duration')
     # set start time and duration
     t_start = t_trigger
