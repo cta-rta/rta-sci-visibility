@@ -27,27 +27,18 @@ cf = parser.parse_args().config
 # load params configuration from cf
 with open(cf) as f:
     cfg = yaml.load(f, Loader=yaml.FullLoader)
-
-filename = cfg['path']['filename']
-site = cfg['setup']['site']
-twilight = cfg['setup']['twilight']
-sites = cfg['sites_list']
-thresholds = cfg['setup']['thresholds']
-zenith_angles = cfg['setup']['zenith_angles']
-use_visibility_table = cfg['use_visibility_table']
-total_points = cfg['total_points']
-window_points = cfg['window_points']
+site = cfg['setup']['site']  # pass to new var for readability and compactness
 
 # initialise site coordinates
-site_coords = EarthLocation.of_site(sites[site])
+site_coords = EarthLocation.of_site(cfg['sites_list'][site])
 # load template
-with fits.open(filename) as hdul:
+with fits.open(cfg['path']['filename']) as hdul:
     hdr = hdul[0].header
     # source coordinates
     source_radec = SkyCoord(ra=hdr['RA'] * u.deg, dec=hdr['DEC'] * u.deg, frame='icrs')
     # source trigger time
     t_trigger = Time(hdr['GRBJD'] * u.day, format='jd')
-    if use_visibility_table in ('all', True):
+    if cfg['use_visibility_table'] in ('all', True):
         # using visibility table
         visibility_table = Table.read(hdul, hdu=1)
         # time windows [THIS SHOULD BE CHANGED ACCORDING TO THE TEMPLATE FORMAT IF > 1 NIGHTS IN TABLE]
@@ -55,9 +46,9 @@ with fits.open(filename) as hdul:
         t_true = {'North': t[0:2], 'South': t[2:4]}
         # minimum altitude
         min_altitude = visibility_table.meta['MIN_ALT'] * u.deg
-        # replace minimum altitude within thresholds
-        thresholds[0] = min_altitude.value
-    if use_visibility_table in ('all', False):
+        # replace minimum altitude within cfg['setup']['thresholds']
+        cfg['setup']['thresholds'][0] = min_altitude.value
+    if cfg['use_visibility_table'] in ('all', False):
         # otherwise use event total duration
         times = np.array(hdul['TIMES (AFTERGLOW)'].data.tolist())
         afterglow_duration = Time(((times[-1] + times[1]) / 2)[0] / 86400, format='jd')
@@ -65,7 +56,7 @@ with fits.open(filename) as hdul:
 
 # --------------------- EXAMPLE 1 (COMPACT) :: USING VISIBILITY TABLE -------------------------- !!!
 
-if use_visibility_table in ('all', True):
+if cfg['use_visibility_table'] in ('all', True):
     print('Example of use: visibility table from template')
     # set start time and duration
     t_start = t_true[site][0]
@@ -77,14 +68,14 @@ if use_visibility_table in ('all', True):
         # initialise
         visibility = Visibility()
         # short-cut: IRFs and relative time intervals
-        irfs = visibility.associate_irf_one_night(source_radec, t_start, duration, sites[site], window_points, thresholds, zenith_angles)
+        irfs = visibility.associate_irf_one_night(source_radec, t_start, duration, cfg['sites_list'][site], cfg['window_points'], cfg['setup']['thresholds'], cfg['setup']['zenith_angles'])
         # complete IRFs
         irfs['irf'] = complete_irf_name(irfs['irf'], site, '0.5h')
         print('IRFs', irfs)
         del visibility
 
 # -------------------------- EXAMPLE 2 (EXPLICIT) :: W/O USING VISIBILITY TABLE -------------------- !!!
-if use_visibility_table in ('all', False):
+if cfg['use_visibility_table'] in ('all', False):
     print('\nExample of use: event full duration')
     # set start time and duration
     t_start = t_trigger
@@ -95,10 +86,10 @@ if use_visibility_table in ('all', False):
         # initialise
         visibility = Visibility()
         # visibility points in JD and AltAz
-        visibility.visibility_points(t_start, duration, total_points)
-        visibility.visibility_altaz(source_radec, sites[site])
+        visibility.visibility_points(t_start, duration, cfg['total_points'])
+        visibility.visibility_altaz(source_radec, cfg['sites_list'][site])
         # find nights
-        nights = visibility.get_nighttime(twilight=twilight)
+        nights = visibility.get_nighttime(twilight=cfg['setup']['twilight'])
         print('nights:', nights)
         del visibility
         # within each night find IRFs
@@ -109,10 +100,10 @@ if use_visibility_table in ('all', False):
             # initialise
             visibility = Visibility()
             # visibility points in JD and AltAz
-            visibility.visibility_points(t_start, duration, window_points)
-            visibility.visibility_altaz(source_radec, sites[site])
+            visibility.visibility_points(t_start, duration, cfg['window_points'])
+            visibility.visibility_altaz(source_radec, cfg['sites_list'][site])
             # IRFs and relative time intervals
-            irfs = visibility.associate_irf_zenith_angle(thresholds, zenith_angles)
+            irfs = visibility.associate_irf_zenith_angle(cfg['setup']['thresholds'], cfg['setup']['zenith_angles'])
             # complete IRFs
             irfs['irf'] = complete_irf_name(irfs['irf'], site, '0.5h')
             print('IRFs', irfs)
